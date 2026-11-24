@@ -352,7 +352,7 @@ const trialURL = () => {
   /* 後台實測：網址只帶 ?PRINT_ID=xxx 時才偵測得到來源，
      加上 utm_ 參數就偵測不到。所以有來源編號時，只帶 PRINT_ID。 */
   if (SRC_ID) {
-    u.searchParams.set("PRINT_ID", SRC_ID);
+    u.searchParams.set("print_id", SRC_ID);
     return u.toString();
   }
   /* 沒有來源編號時，才用 utm 參數留下文章網址當備用紀錄 */
