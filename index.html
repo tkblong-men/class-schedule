@@ -328,22 +328,32 @@ const SOURCE_PAGE = (() => {
   return location.href.split("#")[0];
 })();
 
-/* 來源編號：優先用網址的 ?src=；沒有的話，從「放這張課表的文章網址」裡自動抓 PRINT_ID。
-   iframe 需加上 referrerpolicy="unsafe-url"，瀏覽器才會把文章的完整網址告訴課表。 */
+/* 來源編號：優先用網址的 ?src=；沒有的話，從「放這張課表的文章網址」裡自動抓：
+   1. PRINT_ID（舊式文章頁）
+   2. str（newExam/inside?str=... 這類新頁面，沒有 PRINT_ID，改用 str 的值當來源代碼）
+   iframe 需加上 referrerpolicy="unsafe-url"，瀏覽器才會把文章的完整網址告訴課表。
+   注意：#2 之類的「#」後面的部分瀏覽器不會傳給 iframe，所以無法記錄。 */
 const SRC_ID = (() => {
   const named = new URLSearchParams(location.search).get("src");
   if (named) return named;
-  try { return new URL(document.referrer).searchParams.get("PRINT_ID") || ""; }
-  catch (e) { return ""; }
+  try {
+    const p = new URL(document.referrer).searchParams;
+    return p.get("PRINT_ID") || p.get("str") || "";
+  } catch (e) { return ""; }
 })();
 
 const trialURL = () => {
   const u = new URL(TRIAL_URL);
+  /* 後台實測：網址只帶 ?PRINT_ID=xxx 時才偵測得到來源，
+     加上 utm_ 參數就偵測不到。所以有來源編號時，只帶 PRINT_ID。 */
+  if (SRC_ID) {
+    u.searchParams.set("PRINT_ID", SRC_ID);
+    return u.toString();
+  }
+  /* 沒有來源編號時，才用 utm 參數留下文章網址當備用紀錄 */
   u.searchParams.set("utm_source", "schedule-embed");
   u.searchParams.set("utm_medium", "article");
   u.searchParams.set("utm_content", SOURCE_PAGE);
-  /* 後台既有的來源欄位 PRINT_ID */
-  if (SRC_ID) u.searchParams.set("PRINT_ID", SRC_ID);
   return u.toString();
 };
 
