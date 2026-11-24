@@ -338,7 +338,12 @@ const SRC_ID = (() => {
   if (named) return named;
   try {
     const p = new URL(document.referrer).searchParams;
-    return p.get("PRINT_ID") || p.get("str") || "";
+    /* 參數名稱不分大小寫（實際網址是小寫 print_id） */
+    const find = name => {
+      for (const [k, v] of p.entries()) if (k.toLowerCase() === name && v) return v;
+      return "";
+    };
+    return find("print_id") || find("str");
   } catch (e) { return ""; }
 })();
 
